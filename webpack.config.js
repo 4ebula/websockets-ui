@@ -15,9 +15,6 @@ export default {
       },
     ],
   },
-  plugins: [
-    new Dotenv()
-  ],
   resolve: {
     extensions: ['.ts', '.js', '.json'],
   },

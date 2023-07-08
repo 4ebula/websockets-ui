@@ -1,0 +1,46 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "ignorePatterns": [
+    "*.json",
+    "webpack.config.js",
+    "dist**/*",
+    "node_modules"
+  ],
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "parser": "@typescript-eslint/parser",
+      "parserOptions": {
+        "project": "./tsconfig.json",
+        "sourceType": "module"
+      },
+      "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended"
+      ],
+      "plugins": ["@typescript-eslint"],
+      "rules": {
+        "arrow-parens": ["error", "as-needed"],
+        "import/prefer-default-export": "off",
+        "indent": "off",
+        "linebreak-style": ["error", "unix"],
+        "lines-between-class-members": ["error", "always",  { "exceptAfterSingleLine": true }],
+        "max-len": ["warn", { "code": 90, "ignoreComments": true }],
+        "no-console": "warn",
+        "no-debugger": "warn",
+        "no-empty-function": ["warn", { "allow": ["methods", "constructors"] }],
+        "no-param-reassign": ["error", { "props": false }],
+        "no-shadow": "off",
+        "quotes": ["error", "single", { "allowTemplateLiterals": true }],
+        "@typescript-eslint/indent": ["warn", 2, { "SwitchCase": 1 }],
+        "@typescript-eslint/lines-between-class-members": ["error", "always",  { "exceptAfterSingleLine": true }],
+        "@typescript-eslint/no-empty-function": ["warn", { "allow": ["methods", "constructors"] }],
+        "@typescript-eslint/no-var-requires": "off"
+      }
+    }
+  ],
+  "rules": {}
+}

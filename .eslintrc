@@ -31,6 +31,7 @@
         "max-len": ["warn", { "code": 90, "ignoreComments": true }],
         "no-console": "warn",
         "no-debugger": "warn",
+        "no-useless-catch": "off",
         "no-empty-function": ["warn", { "allow": ["methods", "constructors"] }],
         "no-param-reassign": ["error", { "props": false }],
         "no-shadow": "off",
@@ -38,6 +39,7 @@
         "@typescript-eslint/indent": ["warn", 2, { "SwitchCase": 1 }],
         "@typescript-eslint/lines-between-class-members": ["error", "always",  { "exceptAfterSingleLine": true }],
         "@typescript-eslint/no-empty-function": ["warn", { "allow": ["methods", "constructors"] }],
+        "@typescript-eslint/no-inferrable-types": "off",
         "@typescript-eslint/no-var-requires": "off"
       }
     }

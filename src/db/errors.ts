@@ -3,3 +3,9 @@ export class EmptyFieldError extends Error {
     super(`${prop} should not be empty`);
   }
 }
+
+export class DuplicatedUser extends Error {
+  constructor() {
+    super('User already exists');
+  }
+}

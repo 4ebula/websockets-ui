@@ -12,3 +12,9 @@ export interface PlayerInfo extends PlayerInfoBase {
 export interface PlayerInfoExtended extends PlayerInfoBase {
   index: number;
 }
+
+export interface UserRoomInfo {
+  username: string;
+  id: UUID;
+  index: number;
+}

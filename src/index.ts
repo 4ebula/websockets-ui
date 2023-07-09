@@ -15,7 +15,6 @@ httpServer.listen(HTTP_PORT, () => {
 process.on('SIGINT', () => {
   httpServer.close();
   ws.close();
-  // console.log();
 });
 
 process.on('exit', () => {

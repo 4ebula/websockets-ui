@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { WebSocket, WebSocketServer } from 'ws';
 import {
   WSMessageTypes,
@@ -5,11 +6,9 @@ import {
   RegisterResponceData,
   PlayerRequestData,
   AddUser,
-} from '../models/ws.model';
-import { Players } from '../db/player';
-import { Rooms } from '../db/rooms';
-import { Room } from '../models/room.model';
-import { Games } from '../db/games';
+  Room,
+} from '../models';
+import { Players, Rooms, Games } from '../db';
 
 export class WSServer {
   private readonly webSocketServer: WebSocketServer;
@@ -47,13 +46,14 @@ export class WSServer {
             default:
               break;
           }
-        } catch {
-          // TODO: Hanlde JSON error
+        } catch (err) {
+          const errMsg = this.createError(err);
+          ws.send(errMsg);
         }
       });
 
       ws.on('error', err => {
-        // TODO: handle error
+        console.log(err);
       });
 
       ws.on('close', () => {
@@ -132,10 +132,6 @@ export class WSServer {
     };
 
     this.ws.forEach(socket => socket.send(JSON.stringify(res)));
-    // if (!index) {
-    // } else {
-    //   this.ws.get(index).send(JSON.stringify(res));
-    // }
   }
 
   private handleAddToRoom(playerIndex: number, msg: AddUser): void {
@@ -143,9 +139,6 @@ export class WSServer {
     const room = this.rooms.getRoom(roomIndex);
 
     const playerWs = this.ws.get(playerIndex);
-
-    console.log(playerIndex);
-    console.log(room);
 
     if (!room) {
       const err = this.createDataString(null, null, true, 'Room does not exist');

@@ -1,4 +1,4 @@
-import { GameId, GameInfo, PlayersInfo } from '../models/games.model';
+import { GameId, GameInfo, PlayersInfo } from '../models';
 
 export class Games {
   static instance: Games;

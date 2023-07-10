@@ -1,5 +1,6 @@
+/* eslint-disable no-console */
 import { httpServer } from './http_server';
-import { WSServer } from './ws';
+import { WSServer } from './wsServer';
 
 const HTTP_PORT = 8181;
 const WS_PORT = 3000;

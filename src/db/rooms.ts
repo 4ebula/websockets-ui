@@ -1,5 +1,4 @@
-import { UserRoomInfo } from 'src/models/user.model';
-import { Room } from '../models/room.model';
+import { Room, UserRoomInfo } from '../models';
 
 export class Rooms {
   static instance: Rooms;
@@ -42,13 +41,3 @@ export class Rooms {
     return Rooms.instance;
   }
 }
-
-// export interface Room {
-//   roomId: number;
-//   roomUsers: RoomUser[];
-// }
-
-// export interface RoomUser {
-//   name: string;
-//   index: number;
-// }

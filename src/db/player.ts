@@ -1,4 +1,4 @@
-import { PlayerInfo } from 'src/models/user.model';
+import { PlayerInfo } from '../models';
 import { EmptyFieldError } from './errors';
 
 export class Players {

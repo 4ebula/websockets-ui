@@ -7,6 +7,9 @@ import {
   PlayerRequestData,
   AddUser,
   Room,
+  AddShips,
+  GameData,
+  BasicResponse,
 } from '../models';
 import { Players, Rooms, Games } from '../db';
 
@@ -42,6 +45,10 @@ export class WSServer {
               break;
             case WSMessageTypes.AddToRoom:
               this.handleAddToRoom(index, msg);
+              break;
+              break;
+            case WSMessageTypes.AddShips:
+              this.handleAddShips(index, msg);
               break;
             default:
               break;
@@ -188,6 +195,31 @@ export class WSServer {
     }
   }
 
+  private handleAddShips(playerIndex: number, msg: AddShips): void {
+    const { gameId, ships } = JSON.parse(msg.data) as GameData;
+    const game = this.games.getGameById(gameId);
+    const currentPlayer = game.players.find(player => player.index === playerIndex);
+    currentPlayer.ships = ships;
+
+    if (game.players.every(player => player.ships.length)) {
+      game.players.forEach(({ index, ships }, i) => {
+        const otherPlayer = game.players[+!i];
+        const otherPlayerWs = this.ws.get(otherPlayer.index);
+
+        const payload = this.stringifyResponceWithData({
+          type: WSMessageTypes.StartGame,
+          data: {
+            ships,
+            currentPlayerIndex: index,
+          },
+          id: 0,
+        })
+
+        otherPlayerWs.send(payload);
+      });
+    }
+  }
+
   private createFinishGameResponce(winnerId: number): string {
     return JSON.stringify({
       type: WSMessageTypes.Finish,
@@ -202,11 +234,8 @@ export class WSServer {
     const currentGame = this.games.findGameByPlayer(disconnectIndex);
 
     if (currentGame) {
-      const {
-        gameId,
-        roomId,
-        players: [player1, player2],
-      } = currentGame;
+      const { gameId, roomId, players } = currentGame;
+      const [{ index: player1 }, { index: player2 }] = players;
       const winnerId = player1 === disconnectIndex ? player2 : player1;
       const msg = this.createFinishGameResponce(winnerId);
       this.ws.get(winnerId).send(msg);
@@ -231,5 +260,14 @@ export class WSServer {
       error,
       errorText,
     });
+  }
+
+  private stringifyResponceWithData(payload: BasicResponse): string {
+    const { data, ...rest } = payload;
+
+    return JSON.stringify({
+      ...rest,
+      data: JSON.stringify(data),
+    })
   }
 }

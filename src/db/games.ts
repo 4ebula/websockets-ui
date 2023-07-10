@@ -1,4 +1,4 @@
-import { GameId, GameInfo, PlayersInfo } from '../models';
+import { GameId, GameInfo, PlayerGameInfo } from '../models';
 
 export class Games {
   static instance: Games;
@@ -9,7 +9,9 @@ export class Games {
 
   addGame(player1: number, player2: number, roomId: number): GameId {
     const gameId = this.gamesCount++;
-    const players: PlayersInfo = [player1, player2];
+    const players = [player1, player2].map(
+      this.createPlayer
+    ) as [PlayerGameInfo, PlayerGameInfo];
     const game = {
       gameId,
       roomId,
@@ -21,13 +23,24 @@ export class Games {
 
   findGameByPlayer(playerIndex: number): GameInfo {
     const entry = [...this.games.entries()].find(el =>
-      el[1].players.includes(playerIndex)
+      el[1].players.find(player => player.index === playerIndex)
     );
-    return entry[1] ? entry[1] : null;
+    return entry ? entry[1] : null;
+  }
+
+  getGameById(gameId: GameId): GameInfo {
+    return this.games.get(gameId);
   }
 
   removeGame(gameId: GameId): void {
     this.games.delete(gameId);
+  }
+
+  createPlayer(index: number): PlayerGameInfo {
+    return {
+      index,
+      ships: [],
+    };
   }
 
   static getInstance(): Games {

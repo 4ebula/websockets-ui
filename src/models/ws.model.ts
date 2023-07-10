@@ -1,3 +1,5 @@
+import { GameData } from './games.model';
+
 export enum WSMessageTypes {
   Reg = 'reg',
   CreateRoom = 'create_room',
@@ -5,6 +7,14 @@ export enum WSMessageTypes {
   CreateGame = 'create_game',
   AddToRoom = 'add_user_to_room',
   Finish = 'finish',
+  AddShips = 'add_ships',
+  StartGame = 'start_game',
+}
+
+export interface BasicResponse {
+  type: WSMessageTypes;
+  data: unknown;
+  id: 0;
 }
 
 export interface RegisterRequest {
@@ -50,4 +60,18 @@ export interface AddUser {
   // data:"{\"indexRoom\":1}";
   data: string;
   id: 0;
+}
+
+export interface AddShips {
+  type: WSMessageTypes.AddShips;
+  // data: GameData;
+  data: string;
+  id: 0;
+}
+
+export interface AddShipsUnparsed {
+  type: WSMessageTypes.AddShips;
+  data: GameData;
+  id: 0;
+
 }

@@ -3,6 +3,8 @@ export enum WSMessageTypes {
   CreateRoom = 'create_room',
   UpdateRoom = 'update_room',
   CreateGame = 'create_game',
+  AddToRoom = 'add_user_to_room',
+  Finish = 'finish',
 }
 
 export interface RegisterRequest {
@@ -39,6 +41,13 @@ export interface CreateRoomRequest {
 export interface UpdateRoomRespose {
   type: WSMessageTypes.UpdateRoom;
   // data: Room
+  data: string;
+  id: 0;
+}
+
+export interface AddUser {
+  type: WSMessageTypes.AddToRoom;
+  // data:"{\"indexRoom\":1}";
   data: string;
   id: 0;
 }

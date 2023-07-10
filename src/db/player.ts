@@ -1,5 +1,4 @@
-import { randomUUID } from 'crypto';
-import { PlayerInfo, PlayerInfoExtended } from 'src/models/user.model';
+import { PlayerInfo } from 'src/models/user.model';
 import { EmptyFieldError } from './errors';
 
 export class Players {
@@ -8,11 +7,10 @@ export class Players {
 
   private constructor() {}
 
-  setUser(username: string, password: string, index: number): PlayerInfoExtended {
+  setUser(username: string, password: string, index: number): PlayerInfo {
     try {
       this.validateUser(username, password);
-      const id = randomUUID();
-      const user = { username, password, id };
+      const user = { username, password, index };
       this.players.set(index, user);
 
       return { ...user, index };
@@ -25,7 +23,11 @@ export class Players {
     return this.players.get(index);
   }
 
-  validateUser(username: string, password: string): void {
+  deleteUser(index: number): void {
+    this.players.delete(index);
+  }
+
+  private validateUser(username: string, password: string): void {
     if (!username) {
       throw new EmptyFieldError('username');
     }
@@ -33,10 +35,6 @@ export class Players {
     if (!password) {
       throw new EmptyFieldError('password');
     }
-
-    // if (this.players.length && this.players[0].username === username) {
-    //   throw new DuplicatedUser();
-    // }
   }
 
   static getInstance(): Players {

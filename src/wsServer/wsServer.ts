@@ -6,10 +6,10 @@ import {
   RegisterResponceData,
   PlayerRequestData,
   AddUser,
-  Room,
   AddShips,
   GameData,
   BasicResponse,
+  PlayerInfo,
 } from '../models';
 import { Players, Rooms, Games } from '../db';
 
@@ -18,7 +18,6 @@ export class WSServer {
   private readonly players = Players.getInstance();
   private readonly rooms = Rooms.getInstance();
   private readonly games = Games.getInstance();
-  private currentRoom: Room;
   private ws: Map<number, WebSocket> = new Map();
   private counter = 0;
 
@@ -30,7 +29,7 @@ export class WSServer {
     this.webSocketServer.on('connection', (ws: WebSocket) => {
       console.log(`WS connection opened on port ${this.port}`);
 
-      const index = this.counter++;
+      let index = this.counter++;
       this.ws.set(index, ws);
 
       ws.on('message', data => {
@@ -38,7 +37,23 @@ export class WSServer {
           const msg = JSON.parse(data.toString());
           switch (msg.type) {
             case WSMessageTypes.Reg:
-              this.handleReg(msg, index);
+              {
+                try {
+                  const existingUser = this.players.isUserExists(JSON.parse(msg.data));
+
+                  if (existingUser) {
+                    this.ws.delete(index);
+                    index = existingUser.index;
+                    this.ws.set(index, ws);
+                    this.counter--;
+                    this.createRegResponse(index, existingUser);
+                  } else {
+                    this.handleNewUser(msg, index);
+                  }
+                } catch (err) {
+                  this.createRegError(index, err);
+                }
+              }
               break;
             case WSMessageTypes.CreateRoom:
               this.handleCreateRoom(index);
@@ -65,8 +80,8 @@ export class WSServer {
 
       ws.on('close', () => {
         this.checkCurrentGames(index);
+        this.players.setOffline(index);
         this.ws.delete(index);
-        this.players.deleteUser(index);
         console.log('Connection closed');
       });
     });
@@ -76,33 +91,42 @@ export class WSServer {
     this.webSocketServer.close();
   }
 
-  private handleReg(msg: RegisterRequest, index: number): void {
+  private handleNewUser(msg: RegisterRequest, index: number): void {
     try {
       const { name: username, password } = JSON.parse(msg.data) as PlayerRequestData;
       const user = this.players.setUser(username, password, index);
 
-      const data: RegisterResponceData = {
-        name: username,
-        index: user.index,
-        error: false,
-        errorText: null,
-      };
-      const responceString = JSON.stringify({
-        type: WSMessageTypes.Reg,
-        data: JSON.stringify(data),
-        id: user.index,
-      });
-
-      this.ws.get(index).send(responceString);
-      this.updateRoom(index);
+      this.createRegResponse(index, user);
     } catch (err) {
-      const responceString = JSON.stringify({
-        type: WSMessageTypes.Reg,
-        data: this.createError(err),
-        id: 0,
-      });
-      this.ws.get(index).send(responceString);
+      this.createRegError(index, err);
     }
+  }
+
+  private createRegResponse(index: number, user: PlayerInfo): void {
+    const data: RegisterResponceData = {
+      name: user.username,
+      index: user.index,
+      error: false,
+      errorText: null,
+    };
+
+    const responceString = JSON.stringify({
+      type: WSMessageTypes.Reg,
+      data: JSON.stringify(data),
+      id: user.index,
+    });
+
+    this.ws.get(index).send(responceString);
+    this.updateRoom();
+  }
+
+  private createRegError(index: number, err: Error): void {
+    const responceString = JSON.stringify({
+      type: WSMessageTypes.Reg,
+      data: this.createError(err),
+      id: 0,
+    });
+    this.ws.get(index).send(responceString);
   }
 
   private handleCreateRoom(index: number): void {
@@ -114,27 +138,14 @@ export class WSServer {
       id: 0,
     });
 
-    this.currentRoom = room;
-
-    this.updateRoom(index);
+    this.updateRoom();
   }
 
-  private updateRoom(index?: number): void {
-    const user = this.players.getUser(index);
-    const data: Room[] = [
-      {
-        roomId: this.currentRoom.roomId,
-        roomUsers: [
-          {
-            name: user.username,
-            index: index,
-          },
-        ],
-      },
-    ];
+  private updateRoom(): void {
+    const rooms = this.rooms.getOpenedRooms();
     const res = {
       type: WSMessageTypes.UpdateRoom,
-      data: JSON.stringify(this.currentRoom ? data : []),
+      data: JSON.stringify(rooms.length ? rooms : []),
       id: 0,
     };
 
@@ -192,6 +203,7 @@ export class WSServer {
           })
         );
       });
+      this.updateRoom();
     }
   }
 
@@ -213,7 +225,7 @@ export class WSServer {
             currentPlayerIndex: index,
           },
           id: 0,
-        })
+        });
 
         otherPlayerWs.send(payload);
       });
@@ -268,6 +280,6 @@ export class WSServer {
     return JSON.stringify({
       ...rest,
       data: JSON.stringify(data),
-    })
+    });
   }
 }

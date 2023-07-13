@@ -4,8 +4,14 @@ export class EmptyFieldError extends Error {
   }
 }
 
-export class DuplicatedUser extends Error {
+export class WrongPassword extends Error {
   constructor() {
-    super('User already exists');
+    super('Wrong password');
+  }
+}
+
+export class AlreadyLogged extends Error {
+  constructor() {
+    super('You are already logged in');
   }
 }

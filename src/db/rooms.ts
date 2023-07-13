@@ -29,6 +29,14 @@ export class Rooms {
     return this.rooms.get(roomIndex);
   }
 
+  getOpenedRooms(): Room[] {
+    return [...this.rooms.values()]
+      .map((room: Room) => {
+        return room.roomUsers.length === 1 ? room : null;
+      })
+      .filter(Boolean);
+  }
+
   removeRoom(roomId: number): void {
     this.rooms.delete(roomId);
   }

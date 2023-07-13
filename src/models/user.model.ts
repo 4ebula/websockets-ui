@@ -5,6 +5,7 @@ export interface PlayerInfoBase {
 
 export interface PlayerInfo extends PlayerInfoBase {
   index: number;
+  isLogged: boolean;
 }
 
 export interface UserRoomInfo {

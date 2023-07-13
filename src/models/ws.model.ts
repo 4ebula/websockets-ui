@@ -57,7 +57,7 @@ export interface UpdateRoomRespose {
 
 export interface AddUser {
   type: WSMessageTypes.AddToRoom;
-  // data:"{\"indexRoom\":1}";
+  // data: { indexRoom: 1};
   data: string;
   id: 0;
 }

@@ -15,13 +15,14 @@ import {
   AttackResponseStatus,
   Coordinates,
 } from '../models';
-import { Players, Rooms, Games } from '../db';
+import { Players, Rooms, Games, Winners } from '../db';
 
 export class WSServer {
   private readonly webSocketServer: WebSocketServer;
   private readonly players = Players.getInstance();
   private readonly rooms = Rooms.getInstance();
   private readonly games = Games.getInstance();
+  private readonly winners = Winners.getInstance();
   private ws: Map<number, WebSocket> = new Map();
   private counter = 0;
 
@@ -54,6 +55,7 @@ export class WSServer {
                   } else {
                     this.handleNewUser(msg, index);
                   }
+                  this.sendWinner(ws);
                 } catch (err) {
                   this.createRegError(index, err);
                 }
@@ -292,10 +294,11 @@ export class WSServer {
           const isEveryShipKilled = game.isAllPlayerShipSunk(otherPlayer.index);
 
           if (isEveryShipKilled) {
-            // send victory
+            this.winners.addWin(playerIndex);
             const msg = this.createFinishGameResponce(playerIndex);
             playersWs.forEach(ws => {
               ws.send(msg);
+              this.sendWinner(ws);
             });
             this.games.removeGame(gameId);
             this.rooms.removeRoom(game.getGameInfo().roomId);
@@ -305,6 +308,17 @@ export class WSServer {
         }
         break;
     }
+  }
+
+  private sendWinner(ws: WebSocket): void {
+    const winners = this.winners.getWinners();
+    ws.send(
+      JSON.stringify({
+        type: WSMessageTypes.UpdateWinners,
+        data: JSON.stringify(winners),
+        id: 0,
+      })
+    );
   }
 
   private sendAttack(

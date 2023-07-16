@@ -11,6 +11,7 @@ export enum WSMessageTypes {
   StartGame = 'start_game',
   Attack = 'attack',
   Turn = 'turn',
+  UpdateWinners = 'update_winners',
 }
 
 export interface BasicResponse {

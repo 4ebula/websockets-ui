@@ -10,6 +10,10 @@ import {
   GameData,
   BasicResponse,
   PlayerInfo,
+  AttackRequestData,
+  AttackRequest,
+  AttackResponseStatus,
+  Coordinates,
 } from '../models';
 import { Players, Rooms, Games } from '../db';
 
@@ -61,9 +65,12 @@ export class WSServer {
             case WSMessageTypes.AddToRoom:
               this.handleAddToRoom(index, msg);
               break;
-              break;
             case WSMessageTypes.AddShips:
               this.handleAddShips(index, msg);
+              break;
+              break;
+            case WSMessageTypes.Attack:
+              this.handleAttack(index, msg);
               break;
             default:
               break;
@@ -210,26 +217,100 @@ export class WSServer {
   private handleAddShips(playerIndex: number, msg: AddShips): void {
     const { gameId, ships } = JSON.parse(msg.data) as GameData;
     const game = this.games.getGameById(gameId);
-    const currentPlayer = game.players.find(player => player.index === playerIndex);
-    currentPlayer.ships = ships;
 
-    if (game.players.every(player => player.ships.length)) {
-      game.players.forEach(({ index, ships }, i) => {
-        const otherPlayer = game.players[+!i];
-        const otherPlayerWs = this.ws.get(otherPlayer.index);
+    game.setShipsInfo(playerIndex, ships);
 
+    if (game.getPlayers().every(player => player.ships.length)) {
+      const otherPlayerIndex = game.getOtherPlayer(playerIndex).index;
+
+      game.getPlayers().forEach(({ index, shipsInfo }) => {
         const payload = this.stringifyResponceWithData({
           type: WSMessageTypes.StartGame,
           data: {
-            ships,
+            ships: shipsInfo,
             currentPlayerIndex: index,
           },
           id: 0,
         });
 
-        otherPlayerWs.send(payload);
+        this.ws.get(index).send(payload);
       });
+
+      const firstPlayer = game.getFirstPlayer();
+      this.sendTurn(firstPlayer.index, otherPlayerIndex);
     }
+  }
+
+  private sendTurn(playerIndex: number, otherPlayerIndex: number): void {
+    const data = JSON.stringify({
+      currentPlayer: playerIndex,
+    });
+
+    [this.ws.get(playerIndex), this.ws.get(otherPlayerIndex)].forEach(ws =>
+      ws.send(
+        JSON.stringify({
+          type: WSMessageTypes.Turn,
+          data,
+          id: 0,
+        })
+      )
+    );
+  }
+
+  private handleAttack(playerIndex: number, msg: AttackRequest): void {
+    const data = JSON.parse(msg.data) as AttackRequestData;
+    const { gameId, x, y } = data;
+
+    const game = this.games.getGameById(gameId);
+
+    const otherPlayer = game.getOtherPlayer(playerIndex);
+
+    const hit = game.makeAttack(playerIndex, { x, y });
+
+    const playersWs = [this.ws.get(playerIndex), this.ws.get(otherPlayer.index)];
+
+    playersWs.forEach(ws => {
+      this.sendAttack(ws, playerIndex, { x, y }, hit);
+    });
+
+    switch (hit) {
+      case AttackResponseStatus.Miss:
+        this.sendTurn(otherPlayer.index, playerIndex);
+        break;
+      case AttackResponseStatus.Shot:
+        this.sendTurn(playerIndex, otherPlayer.index);
+        break;
+      case AttackResponseStatus.Killed:
+        {
+          const epmtySpaces = game.findShipEmptySpaces(otherPlayer.index, { x, y });
+          playersWs.forEach(ws => {
+            epmtySpaces.forEach(coordinates => {
+              this.sendAttack(ws, playerIndex, coordinates, AttackResponseStatus.Miss);
+            });
+          });
+          // send if miss, otherwise first keep on hitting
+          this.sendTurn(playerIndex, otherPlayer.index);
+        }
+        break;
+    }
+  }
+
+  private sendAttack(
+    ws: WebSocket,
+    playerIndex: number,
+    position: Coordinates,
+    status: AttackResponseStatus
+  ): void {
+    const payload = JSON.stringify({
+      type: WSMessageTypes.Attack,
+      data: JSON.stringify({
+        position,
+        currentPlayer: playerIndex,
+        status,
+      }),
+      id: 0,
+    });
+    ws.send(payload);
   }
 
   private createFinishGameResponce(winnerId: number): string {

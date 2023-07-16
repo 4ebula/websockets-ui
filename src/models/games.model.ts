@@ -1,3 +1,6 @@
+import { Ship } from '../game/ship';
+import { Coordinates, ShipInfo } from './ships.model';
+
 export interface GameInfo {
   gameId: GameId;
   roomId: number;
@@ -6,37 +9,15 @@ export interface GameInfo {
 
 export interface PlayerGameInfo {
   index: number;
+  shipsInfo: ShipInfo[];
   ships: Ship[];
+  hits: Coordinates[];
 }
 
 export type GameId = number;
 
-export interface Ship {
-  direction: boolean;
-  type: ShipTypes;
-  length: ShipLength;
-  position: {
-    x: number;
-    y: number;
-  };
-}
-
-export enum ShipTypes {
-  Small = 'small',
-  Medium = 'medium',
-  Large = 'large',
-  Huge = 'huge',
-}
-
-export enum ShipLength {
-  Small = 1,
-  Medium = 2,
-  Large = 3,
-  Huge = 4,
-}
-
 export interface GameData {
   gameId: number;
-  ships: Ship[];
+  ships: ShipInfo[];
   indexPlayer: number;
 }

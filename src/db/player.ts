@@ -47,7 +47,10 @@ export class Players {
   }
 
   setOffline(index: number): void {
-    this.players.get(index).isLogged = false;
+    const player = this.players.get(index);
+    if (player) {
+      player.isLogged = false;
+    }
   }
 
   private checkPassword(pass: string, index: number): boolean {

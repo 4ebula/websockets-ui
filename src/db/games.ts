@@ -1,34 +1,22 @@
-import { GameId, GameInfo, PlayerGameInfo } from '../models';
+import { Game } from '../game';
+import { GameId, GameInfo } from '../models';
 
 export class Games {
   static instance: Games;
-  private games: Map<number, GameInfo> = new Map();
+  private games: Map<number, Game> = new Map();
   private gamesCount = 0;
 
   private constructor() {}
 
   addGame(player1: number, player2: number, roomId: number): GameId {
     const gameId = this.gamesCount++;
-    const players = [player1, player2].map(
-      this.createPlayer
-    ) as [PlayerGameInfo, PlayerGameInfo];
-    const game = {
-      gameId,
-      roomId,
-      players,
-    };
+    const game = new Game(gameId, roomId, [player1, player2]);
+
     this.games.set(gameId, game);
-    return gameId;
+    return game.getGameId();
   }
 
-  findGameByPlayer(playerIndex: number): GameInfo {
-    const entry = [...this.games.entries()].find(el =>
-      el[1].players.find(player => player.index === playerIndex)
-    );
-    return entry ? entry[1] : null;
-  }
-
-  getGameById(gameId: GameId): GameInfo {
+  getGameById(gameId: GameId): Game {
     return this.games.get(gameId);
   }
 
@@ -36,12 +24,13 @@ export class Games {
     this.games.delete(gameId);
   }
 
-  createPlayer(index: number): PlayerGameInfo {
-    return {
-      index,
-      ships: [],
-    };
+  findGameByPlayer(playerIndex: number): GameInfo {
+    const entry = [...this.games.entries()].find(el =>
+      el[1].getPlayers().find(player => player.index === playerIndex)
+    );
+    return entry ? entry[1].getGameInfo() : null;
   }
+
 
   static getInstance(): Games {
     if (!Games.instance) {

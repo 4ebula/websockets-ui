@@ -9,6 +9,8 @@ export enum WSMessageTypes {
   Finish = 'finish',
   AddShips = 'add_ships',
   StartGame = 'start_game',
+  Attack = 'attack',
+  Turn = 'turn',
 }
 
 export interface BasicResponse {
@@ -73,5 +75,32 @@ export interface AddShipsUnparsed {
   type: WSMessageTypes.AddShips;
   data: GameData;
   id: 0;
+}
 
+export interface AttackRequest {
+  type: WSMessageTypes.Attack;
+  data: string;
+  id: 0;
+}
+
+export interface AttackRequestData {
+  gameId: number;
+  x: number;
+  y: number;
+  indexPlayer: number /* id of the player in the current game */;
+}
+
+export interface AttackResponseData {
+  position: {
+    x: number;
+    y: number;
+  };
+  currentPlayer: number /* id of the player in the current game */;
+  status: AttackResponseStatus;
+}
+
+export enum AttackResponseStatus {
+  Miss = 'miss',
+  Killed = 'killed',
+  Shot = 'shot',
 }

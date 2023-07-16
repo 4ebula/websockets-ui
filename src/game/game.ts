@@ -102,4 +102,8 @@ export class Game {
     return sunkShip
       .getEmptySpaces();
   }
+
+  isAllPlayerShipSunk(playerIndex: number): boolean {
+    return this.getPlayerByIndex(playerIndex).ships.every(ship => ship.killed);
+  }
 }

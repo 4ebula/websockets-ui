@@ -288,8 +288,20 @@ export class WSServer {
               this.sendAttack(ws, playerIndex, coordinates, AttackResponseStatus.Miss);
             });
           });
-          // send if miss, otherwise first keep on hitting
-          this.sendTurn(playerIndex, otherPlayer.index);
+
+          const isEveryShipKilled = game.isAllPlayerShipSunk(otherPlayer.index);
+
+          if (isEveryShipKilled) {
+            // send victory
+            const msg = this.createFinishGameResponce(playerIndex);
+            playersWs.forEach(ws => {
+              ws.send(msg);
+            });
+            this.games.removeGame(gameId);
+            this.rooms.removeRoom(game.getGameInfo().roomId);
+          } else {
+            this.sendTurn(playerIndex, otherPlayer.index);
+          }
         }
         break;
     }

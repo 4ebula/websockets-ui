@@ -90,20 +90,38 @@ export class Game {
     }
   }
 
-  findShipEmptySpaces(
-    playerIndex: number,
-    coordinates: Coordinates
-  ): Coordinates[] {
+  findShipEmptySpaces(playerIndex: number, coordinates: Coordinates): Coordinates[] {
     const player = this.getPlayerByIndex(playerIndex);
     const sunkShip = player.ships.find(ship =>
       ship.checkIfCoordinatesOnShip(coordinates)
     );
 
-    return sunkShip
-      .getEmptySpaces();
+    return sunkShip.getEmptySpaces();
   }
 
   isAllPlayerShipSunk(playerIndex: number): boolean {
     return this.getPlayerByIndex(playerIndex).ships.every(ship => ship.killed);
+  }
+
+  findPlaceToHit(playerIndex: number): Coordinates {
+    const otherPlayer = this.getOtherPlayer(playerIndex);
+
+    const allHits = otherPlayer.ships.reduce((acc, { hits }) => {
+      hits.forEach(hit => acc.push(hit));
+      return acc;
+    }, []);
+
+    let x: number, y: number;
+    do {
+      x = this.generateRandomCoordinate();
+      y = this.generateRandomCoordinate();
+
+    } while (allHits.find(coordinates => coordinates.x !== x && coordinates.y !== y));
+
+    return { x, y };
+  }
+
+  private generateRandomCoordinate(): number {
+    return Math.floor(Math.random() * (10 + 1));
   }
 }

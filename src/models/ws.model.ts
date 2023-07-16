@@ -1,4 +1,4 @@
-import { GameData } from './games.model';
+import { GameData, GameId } from './games.model';
 
 export enum WSMessageTypes {
   Reg = 'reg',
@@ -12,6 +12,7 @@ export enum WSMessageTypes {
   Attack = 'attack',
   Turn = 'turn',
   UpdateWinners = 'update_winners',
+  RandomAttack = 'randomAttack',
 }
 
 export interface BasicResponse {
@@ -84,11 +85,23 @@ export interface AttackRequest {
   id: 0;
 }
 
+export interface RandomAttackRequest {
+  type: WSMessageTypes.RandomAttack;
+  // data: RandomAttackRequestData
+  data: string;
+  id: 0;
+}
+
 export interface AttackRequestData {
   gameId: number;
   x: number;
   y: number;
-  indexPlayer: number /* id of the player in the current game */;
+  indexPlayer: number;
+}
+
+export interface RandomAttackRequestData {
+  gameId: GameId,
+  indexPlayer: number,
 }
 
 export interface AttackResponseData {

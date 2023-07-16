@@ -14,6 +14,7 @@ import {
   AttackRequest,
   AttackResponseStatus,
   Coordinates,
+  RandomAttackRequestData,
 } from '../models';
 import { Players, Rooms, Games, Winners } from '../db';
 
@@ -70,9 +71,14 @@ export class WSServer {
             case WSMessageTypes.AddShips:
               this.handleAddShips(index, msg);
               break;
-              break;
             case WSMessageTypes.Attack:
-              this.handleAttack(index, msg);
+              {
+                const data = JSON.parse(msg.data) as AttackRequestData;
+                this.handleAttack(index, data);
+              }
+              break;
+            case WSMessageTypes.RandomAttack:
+              this.handleRandomAttack(index, msg);
               break;
             default:
               break;
@@ -259,8 +265,7 @@ export class WSServer {
     );
   }
 
-  private handleAttack(playerIndex: number, msg: AttackRequest): void {
-    const data = JSON.parse(msg.data) as AttackRequestData;
+  private handleAttack(playerIndex: number, data: AttackRequestData): void {
     const { gameId, x, y } = data;
 
     const game = this.games.getGameById(gameId);
@@ -308,6 +313,16 @@ export class WSServer {
         }
         break;
     }
+  }
+
+  private handleRandomAttack(playerIndex: number, msg: AttackRequest): void {
+    const { gameId } = JSON.parse(msg.data) as RandomAttackRequestData;
+
+    const game = this.games.getGameById(gameId);
+
+    const { x, y } = game.findPlaceToHit(playerIndex);
+
+    this.handleAttack(playerIndex, { gameId, x, y, indexPlayer: playerIndex });
   }
 
   private sendWinner(ws: WebSocket): void {
